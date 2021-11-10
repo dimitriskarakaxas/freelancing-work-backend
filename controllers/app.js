@@ -1,12 +1,16 @@
+const { response } = require("express");
+const { validationResult } = require("express-validator");
+
 const Site = require("../models/site");
 
 exports.getSites = (req, res, next) => {
-  Site.findAll({ attributes: ["site_id", "owner"] })
+  Site.findAll({ attributes: ["site_id", "owner", "siteName"] })
     .then((retrievedSites) => {
       const sites = retrievedSites.map((site) => {
-        const { site_id, owner } = site.dataValues;
+        const { site_id, owner, siteName } = site.dataValues;
         return {
           siteId: site_id,
+          siteName: siteName,
           owner: owner,
         };
       });
@@ -34,7 +38,17 @@ exports.getSiteDetails = (req, res, next) => {
 };
 
 exports.createSite = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: "Validation failed, entered data is incorrect.",
+      errors: errors.array(),
+    });
+  }
+
   const siteDetails = {
+    siteName: req.body.siteName,
     owner: req.body.owner,
     longitude: req.body.longitude,
     latitude: req.body.latitude,
@@ -52,13 +66,28 @@ exports.createSite = (req, res, next) => {
         siteDetails: newSite,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message = "Somethin wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
 };
 
 exports.updateSite = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: "Validation failed, entered data is incorrect.",
+      errors: errors.array(),
+    });
+  }
+
   const siteId = req.params.siteId;
 
   const siteDetails = {
+    siteName: req.body.siteName,
     owner: req.body.owner,
     longitude: req.body.longitude,
     latitude: req.body.latitude,
@@ -79,5 +108,12 @@ exports.updateSite = (req, res, next) => {
         siteDetails: updatedSite.toJSON(),
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message =
+          "Something wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
 };

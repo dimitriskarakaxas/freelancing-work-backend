@@ -13,6 +13,10 @@ const Site = sequelize.define(
       allowNull: false,
       primaryKey: true,
     },
+    siteName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     owner: {
       type: DataTypes.STRING,
       allowNull: false,

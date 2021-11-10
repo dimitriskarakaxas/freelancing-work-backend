@@ -1,4 +1,16 @@
 const express = require("express");
+const { body } = require("express-validator");
+
+const incomingDataValidaion = [
+  body("siteName").trim().isLength({ min: 1 }),
+  body("owner").trim().isLength({ min: 1 }),
+  body("longitude").isFloat(),
+  body("latitude").isFloat(),
+  body("utc").isInt(),
+  body("internal").isBoolean(),
+  body("dst").isBoolean(),
+  body("disabled").isBoolean(),
+];
 
 const applicationController = require("../controllers/app");
 
@@ -11,9 +23,13 @@ router.get("/sites", applicationController.getSites);
 router.get("/sites/:siteId", applicationController.getSiteDetails);
 
 // Create a new Site entry
-router.post("/sites", applicationController.createSite);
+router.post("/sites", incomingDataValidaion, applicationController.createSite);
 
 // Update Site's details
-router.put("/sites/:siteId", applicationController.updateSite);
+router.put(
+  "/sites/:siteId",
+  incomingDataValidaion,
+  applicationController.updateSite
+);
 
 module.exports = router;
