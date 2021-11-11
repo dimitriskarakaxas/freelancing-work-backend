@@ -117,3 +117,24 @@ exports.updateSite = (req, res, next) => {
       next(err);
     });
 };
+
+exports.deleteSite = (req, res, next) => {
+  const siteId = req.params.siteId;
+
+  Site.findByPk(siteId)
+    .then((fetchedSite) => {
+      console.log(fetchedSite);
+      return fetchedSite.destroy();
+    })
+    .then((result) => {
+      res.status(200).json({ message: "Resource deleted succesfully." });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message =
+          "Something wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
+};

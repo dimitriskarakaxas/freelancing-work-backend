@@ -7,7 +7,6 @@ const incomingDataValidaion = [
   body("longitude").isFloat(),
   body("latitude").isFloat(),
   body("utc").isInt(),
-  body("internal").isBoolean(),
   body("dst").isBoolean(),
   body("disabled").isBoolean(),
 ];
@@ -31,5 +30,7 @@ router.put(
   incomingDataValidaion,
   applicationController.updateSite
 );
+
+router.delete("/sites/:siteId", applicationController.deleteSite);
 
 module.exports = router;
