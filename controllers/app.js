@@ -1,10 +1,62 @@
-const { response } = require("express");
 const { validationResult } = require("express-validator");
 
 const Site = require("../models/site");
+const Portfolio = require("../models/portfolio");
+
+exports.getPortfolios = (req, res, next) => {
+  Portfolio.findAll()
+    .then((retrievedPortfolios) => {
+      const portfolios = retrievedPortfolios.map((portfolio) => {
+        return { ...portfolio.dataValues };
+      });
+      res.status(200).json(portfolios);
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message = "Somethin wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
+};
+
+exports.createPortfolio = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      message: "Validation failed, entered data is incorrect.",
+      errors: errors.array(),
+    });
+  }
+
+  const portfolioDetails = {
+    portfolioName: req.body.portfolioName,
+    owner: req.body.owner,
+  };
+
+  Portfolio.create(portfolioDetails)
+    .then((newPortfolio) => {
+      res.status(201).json({
+        message: "Portfolio created succesfully.",
+        portfolioDetails: newPortfolio,
+      });
+    })
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message = "Somethin wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
+};
 
 exports.getSites = (req, res, next) => {
-  Site.findAll({ attributes: ["site_id", "owner", "siteName"] })
+  const portfolioId = req.query.portfolio_id;
+  Site.findAll({
+    where: { portfolio_id: portfolioId },
+    attributes: ["site_id", "owner", "siteName"],
+  })
     .then((retrievedSites) => {
       const sites = retrievedSites.map((site) => {
         const { site_id, owner, siteName } = site.dataValues;
@@ -16,7 +68,13 @@ exports.getSites = (req, res, next) => {
       });
       res.status(200).json(sites);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message = "Somethin wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
 };
 
 exports.getSiteDetails = (req, res, next) => {
@@ -34,7 +92,13 @@ exports.getSiteDetails = (req, res, next) => {
       };
       res.status(200).json(siteDetails);
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      if (!err.statusCode) {
+        err.statusCode = 500;
+        err.message = "Somethin wrong happened on the server. Try again later.";
+      }
+      next(err);
+    });
 };
 
 exports.createSite = (req, res, next) => {
@@ -56,6 +120,7 @@ exports.createSite = (req, res, next) => {
     internal: req.body.internal,
     dst: req.body.dst,
     disabled: req.body.disabled,
+    portfolio_id: req.body.portfolio_id,
   };
 
   Site.create(siteDetails)
